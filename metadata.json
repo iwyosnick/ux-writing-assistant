@@ -1,0 +1,6 @@
+{
+  "name": "UX Writing Assistant",
+  "description": "An AI-powered tool to help you improve your UX writing. Enter your text and get suggestions for making it clearer, more concise, and more user-friendly.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}

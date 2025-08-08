@@ -1,8 +1,8 @@
-cat > .github/workflows/deploy.yml <<'YAML'
 name: Deploy to Firebase Hosting
-on:
+"on":
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build_and_deploy:
@@ -14,7 +14,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Authenticate to Google Cloud using Workload Identity Federation (no keys)
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: projects/1049731001682/locations/global/workloadIdentityPools/github-pool/providers/github-provider
@@ -22,12 +21,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - run: npm install
       - run: npm run build
 
-      # Deploy via Firebase CLI
       - name: Deploy to Firebase Hosting
         run: npx firebase-tools deploy --only hosting --project ux-writer-agent --non-interactive
-YAML

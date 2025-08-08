@@ -4,6 +4,37 @@ on:
     branches: [ main ]
 
 jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Authenticate to Google Cloud using Workload Identity Federation (no keys)
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/1049731001682/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: github-action-1033985346@ux-writer-agent.iam.gserviceaccount.com
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm install
+      - run: npm run build
+
+      # Deploy via Firebase CLI
+      - name: Deploy to Firebase Hosting
+        run: npx firebase-tools deploy --only hosting --project ux-writer-agent --non-interactive
+name: Deploy to Firebase Hosting
+on:
+  push:
+    branches: [ main ]
+
+jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:

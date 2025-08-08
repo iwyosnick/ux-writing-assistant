@@ -1,30 +1,57 @@
 name: Deploy to Firebase Hosting
+
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    permissions:
+      contents: read
+      id-token: write    # required for Workload Identity Federation
 
-      - uses: actions/setup-node@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Authenticate to Google Cloud (WIF, no service account keys)
+      - name: Google Cloud auth (WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/1049731001682/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: github-action-1033985346@ux-writer-agent.iam.gserviceaccount.com
+
+      # Make gcloud & gsutil available if you want to call other GCP services
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ux-writer-agent
+
+      # Example (optional): GCP calls here now have ADC via WIF
+      # - name: Example Vertex AI call
+      #   run: |
+      #     gcloud auth list
+      #     gcloud ai locations list --project=ux-writer-agent
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: 'package-lock.json'
 
-      - name: Install deps
+      - name: Install dependencies
         run: npm ci
 
-      - name: Build
+      - name: Build project
         run: npm run build
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
-      - name: Deploy to Firebase Hosting
+      - name: Deploy to Firebase Hosting (token-based)
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         run: firebase deploy --only hosting --project ux-writer-agent --non-interactive
